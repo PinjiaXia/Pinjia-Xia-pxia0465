@@ -1,57 +1,67 @@
-let img;                    
-let numSegments = 300; 
-let noiseScale = 0.01;      // Scale for Perlin noise, controls "jitter" intensity
+let img;                     
+let particles = [];          // Array to store particle objects 
+let noiseScale = 0.01;       // Scale for Perlin noise, controls "jitter" intensity 
 
 function preload() {
   img = loadImage('assets/Claude_Monet,_Saint-Georges_majeur_au_crépuscule.jpg');
 }
 
 function setup() {
-  createCanvas(windowWidth, windowHeight);  
-}
-
-function draw() {
-  background(255, 20); // Semi-transparent background to create a trailing effect 
-  
-  // Calculate scale factor to fit the image within the canvas while maintaining aspect ratio
+  createCanvas(windowWidth, windowHeight);   
   let scaleFactor = min(width / img.width, height / img.height);
-  let displayWidth = img.width * scaleFactor; 
-  let displayHeight = img.height * scaleFactor; 
+  img.resize(img.width * scaleFactor, img.height * scaleFactor);
 
-  // Center the image on the canvas by calculating offsets
-  let offsetXCanvas = (width - displayWidth) / 2;
-  let offsetYCanvas = (height - displayHeight) / 2;
-
-  let segmentWidth = displayWidth / numSegments;
-  let segmentHeight = displayHeight / numSegments;
-
-  // Loop through each segment's position to create a dynamic mosaic effect with noise-based jitter
-  for (let y = 0; y < displayHeight; y += segmentHeight) {
-    for (let x = 0; x < displayWidth; x += segmentWidth) {
-      
-      // Calculate the original image coordinates for the current segment
-      let originalX = x / scaleFactor;
-      let originalY = y / scaleFactor;
-      
-      // Get the color of the pixel at the segment's center in the original image
-      let segmentColour = img.get(originalX, originalY);
-      
-      fill(segmentColour[0], segmentColour[1], segmentColour[2], 150); // Transparency set to 150
-      noStroke();
-      
-      // Use Perlin noise to create a smooth random offset for each segment
-      let noiseX = noise((x + frameCount) * noiseScale, y * noiseScale); 
-      let noiseY = noise(x * noiseScale, (y + frameCount) * noiseScale); 
-      
-      // Map the noise values to a range for offsetting the ellipse position
-      let offsetXNoise = map(noiseX, 0, 1, -5, 5); 
-      let offsetYNoise = map(noiseY, 0, 1, -5, 5);
-
-      ellipse(offsetXCanvas + x + offsetXNoise, offsetYCanvas + y + offsetYNoise, segmentWidth, segmentHeight);
+  // Create particles at intervals across the image and store them in the particles array
+  for (let y = 0; y < img.height; y += 10) {          
+    for (let x = 0; x < img.width; x += 10) {         
+      let c = img.get(x, y);                          
+      particles.push(new Particle(x, y, c));          // Create and store a new particle 
     }
   }
 }
 
+function draw() {
+  background(255, 20);   // Semi-transparent background for trailing effect 
+  
+  // Update and display each particle示
+  for (let i = 0; i < particles.length; i++) {
+    particles[i].update();                           
+    particles[i].display();                   
+  }
+}
+
+class Particle {
+  constructor(x, y, color) {
+    this.baseX = x;        
+    this.baseY = y;        
+    this.x = x;          
+    this.y = y;            
+    this.color = color;    
+    this.size = 5;      
+  }
+
+  update() {
+    // Generate noise-based offsets for smooth, dynamic movement 
+    let noiseX = noise((this.baseX + frameCount) * noiseScale, this.baseY * noiseScale); 
+    let noiseY = noise(this.baseX * noiseScale, (this.baseY + frameCount) * noiseScale); 
+
+    // Map noise values to a range for offsetting position 
+    let offsetX = map(noiseX, 0, 1, -5, 5);        
+    let offsetY = map(noiseY, 0, 1, -5, 5);      
+    
+    // Apply offsets to the particle's current position 
+    this.x = this.baseX + offsetX;
+    this.y = this.baseY + offsetY;
+  }
+
+  display() {
+    // Set fill color with transparency and draw the particle 
+    fill(this.color[0], this.color[1], this.color[2], 150); // Transparency set to 150 
+    noStroke();                                             
+    ellipse(this.x, this.y, this.size, this.size);          
+  }
+}
+
 function windowResized() {
-  resizeCanvas(windowWidth, windowHeight); // Adjust canvas size on window resize
+  resizeCanvas(windowWidth, windowHeight); // Adjust canvas size on window resize 
 }
