@@ -1,7 +1,8 @@
-let img;                      
+let img;                       
 let particles = [];            // Array to store particle objects
-let noiseScale = 0.01;         // Scale for Perlin noise, controls "jitter" intensity
-let interactionRadius = 80;    // Radius for interaction effect with mouse
+let noiseScale = 0.02;         // Scale for Perlin noise to control drifting effect Perlin 
+let maxOffset = 30;            // Maximum offset for floating effect
+let interactionRadius = 80;    // Radius of interaction area with mouse
 
 function preload() {
   img = loadImage('assets/Claude_Monet,_Saint-Georges_majeur_au_crépuscule.jpg');
@@ -9,67 +10,70 @@ function preload() {
 
 function setup() {
   createCanvas(windowWidth, windowHeight);  
-  img.resize(width, height);       
-
-  // Create particles at intervals across the image and store them in the particles array
-  for (let y = 0; y < img.height; y += 10) {        
-    for (let x = 0; x < img.width; x += 10) {        
-      let c = img.get(x, y);                         
-      particles.push(new Particle(x, y, c));          // Create and store a new particle 
+  img.resize(width, height);                 
+  noStroke();                               
+  
+  // Initialize particles at intervals of 10 pixels 
+  for (let y = 0; y < img.height; y += 10) {
+    for (let x = 0; x < img.width; x += 10) {
+      let c = img.get(x, y);                 
+      particles.push(new Particle(x, y, c)); 
     }
   }
 }
 
 function draw() {
-  background(0, 20); // Semi-transparent black background for trailing effect 
-  
-  // Update and display each particle with potential interaction effect
+  background(0, 20); // Set a low-opacity black background to create a trailing effect 
+
+  // Update and display all particles 
   for (let i = 0; i < particles.length; i++) {
-    particles[i].update();                         
-    particles[i].display();                     
+    particles[i].update();  
+    particles[i].display();  
   }
 }
 
+// Particle class
 class Particle {
-  constructor(x, y, color) {
-    this.baseX = x;          
-    this.baseY = y;        
-    this.x = x;            
-    this.y = y;           
-    this.color = color;    
-    this.size = random(3, 8); // Random size for each particle
+  constructor(x, y, col) {
+    this.baseX = x;               
+    this.baseY = y;                
+    this.x = x;
+    this.y = y;
+    this.color = color(col);       // Particle color
+    this.color.setAlpha(150);      // Set initial alpha for trailing effect 
+    this.size = random(3, 8);      // Random particle size between 3 and 8 
   }
 
+  // Update particle position to simulate floating 
   update() {
-    // Generate noise-based offsets for smooth, dynamic movement 
-    let noiseX = noise((this.baseX + frameCount) * noiseScale, this.baseY * noiseScale); 
-    let noiseY = noise(this.baseX * noiseScale, (this.baseY + frameCount) * noiseScale);
+    let time = frameCount * 0.03;  // Time factor for Perlin noise
+    let offsetX = map(noise(this.baseX * noiseScale, this.baseY * noiseScale, time), 0, 1, -maxOffset, maxOffset);
+    let offsetY = map(noise(this.baseY * noiseScale, this.baseX * noiseScale, time), 0, 1, -maxOffset, maxOffset);
 
-    // Map noise values to a larger range for more pronounced offset
-    let offsetX = map(noiseX, 0, 1, -30, 30);        
-    let offsetY = map(noiseY, 0, 1, -30, 30);       
-    // Apply offsets to the particle's current position 
+    // Update position with offset to simulate floating 
     this.x = this.baseX + offsetX;
     this.y = this.baseY + offsetY;
   }
 
+  // Display the particle 
   display() {
-    // Calculate distance from the mouse to determine interaction effect 
-    let d = dist(mouseX, mouseY, this.x, this.y);
+    let d = dist(mouseX, mouseY, this.x, this.y);  // Calculate distance from mouse
 
-    if (d < interactionRadius) {                     // If within interaction radius
-      let scaleFactor = map(d, 0, interactionRadius, 1.8, 1.0); // Scale based on distance 
-      fill(this.color[0], this.color[1], this.color[2], 200);    // Higher opacity
-      ellipse(this.x, this.y, this.size * scaleFactor, this.size * scaleFactor); 
-    } else {                                         // If outside interaction radius
-      fill(this.color[0], this.color[1], this.color[2], 150);  
+    // If within interaction radius, enlarge particle with random factor
+    if (d < interactionRadius) {
+      randomSeed(frameCount); // Set random seed for scaling effect each frame
+      let randomSizeFactor = random(1.3, 1.8); // Scale factor between 1.3 and 1.8
+      fill(this.color);
+      ellipse(this.x, this.y, this.size * randomSizeFactor, this.size * randomSizeFactor);
+    } else {
+      fill(this.color);
       ellipse(this.x, this.y, this.size, this.size); 
     }
   }
 }
 
 function mousePressed() {
-  // Reset all particles to their base positions on mouse press
+  // Reset all particles to their base positions on mouse press 
   for (let i = 0; i < particles.length; i++) {
     particles[i].x = particles[i].baseX;
     particles[i].y = particles[i].baseY;
@@ -77,7 +81,7 @@ function mousePressed() {
 }
 
 function windowResized() {
-  resizeCanvas(windowWidth, windowHeight);            // Adjust canvas size on window resize 
-  particles = [];                                     // Clear existing particles
-  setup();                                           
+  resizeCanvas(windowWidth, windowHeight);  // Adjust canvas size on window resize
+  particles = [];                          // Clear particle array 
+  setup();                                 
 }
