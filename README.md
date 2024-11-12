@@ -1,5 +1,3 @@
-# Personal code
-
 ## Instructions on How to Interact with the Work
 
 The inspiration for this art code work comes from the hope of making Monet's paintings sway gently like water plants in the water, following the waves. Through particle simulation and dynamic effects, static paintings are given life, presenting the feeling of water plants swaying in the water. Particles will interact based on the movement and clicking of the mouse.
@@ -25,7 +23,7 @@ This GIF animation reminds me of plants or aquatic plants dancing gently with th
 
 Monet's works often pursue subtle changes in light, shadow, and color. My goal is to simulate these changes through programming, so that viewers can not only see static paintings, but also feel them flowing. Through mouse interaction, viewers can gently disturb the image like waves in water flow, experiencing the rebirth of art in digital media.
 
-## Technical Specifications
+### Technical Specifications
 
 My personal code achieved animation effects by decomposing the image into a large number of particles and simulating the floating of each particle using Perlin noise. These particles slowly shift in both horizontal and vertical directions, simulating the gentle flow of water waves, causing the image to sway like aquatic plants in water.
 
